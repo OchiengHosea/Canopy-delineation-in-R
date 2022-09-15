@@ -83,3 +83,54 @@ Assuming that each crown has a roughly circular shape, we can use the crown's ar
 crownsPoly[["crownDiameter"]] <- sqrt(crownsPoly[["crownArea"]]/pi) * 2
 mean(crownsPoly$crownDiameter)
 ```
+
+### Spatial Statistics
+
+```{r}
+sp_summarise(ttops)
+```
+
+```{r}
+sp_summarise(crownsPoly, variables = c("crownArea", "height"))
+```
+
+### Statistics by polygons
+
+The forest tools package includes the boundaries of three cutting blocks that can be overlayed on CHM. Tree counts and height statistcs can be summarizes within these boundaries using the `areas` argument
+
+```{r}
+data("kootenayBlocks")
+
+blockStats <- sp_summarise(ttops, areas = kootenayBlocks, variables = "height")
+
+plot(kootenayCHM, xlab = "", ylab = "", xaxt="n", yaxt="n")
+plot(kootenayBlocks, add = TRUE, border = "darkmagenta", lwd = 2)
+
+# Add tree counts to the plot
+library(rgeos)
+text(gCentroid(kootenayBlocks, byid = TRUE), blockStats[["TreeCount"]], col = "darkmagenta", font = 2)
+```
+
+```{r}
+blockStats@data
+```
+
+### Statistics by grid
+
+Instead of defining polygonal areas, the sp_summaries function can also generate counts and statistics in raster format. IN this case, the grid argument should be used instead of areas.
+
+```{r}
+gridCount <- sp_summarise(ttops, grid = 10)
+
+# plot grid
+plot(gridCount, col = heat.colors(255), xlab = "", ylab = "", xaxt='n', yaxt = 'n')
+```
+
+If, in addition to tree count, tree attribute statistics are computed, the object returned by `sp_summarise` will be a [RasterBrick](https://cran.r-project.org/package=raster/raster.pdf#page=36), i.e.: a multi-layered raster.
+
+\
+
+```{r}
+gridStats <- sp_summarise(trees = ttops, grid = 10, variables = "height")
+names(gridStats)
+```
