@@ -1,0 +1,49 @@
+---
+title: "Canopy Analysis using Forest Tools"
+output: html_notebook
+---
+
+```{r}
+# Install packages - install.packages("ForestTools")
+# Load packages
+library(ForestTools)
+library(raster)
+
+# Load sample canopy height model
+data("kootenayCHM")
+
+# remove plot margins(optional)
+par(mar = rep(0.5, 4))
+
+# plot CHM (Extra optionale arguments remove labels and tick marks from the plot)
+plot(kootenayCHM, xlab = "", ylab = "n", yaxt = 'n')
+```
+
+### Detecting treetops
+
+Dominant treetops can be detected using `vwf`
+
+this function implements the variable window filter algorithm developed by Popescu and Wayne. A moving window scans the CHM, and if a given cell is found to be the highest within the window, it is tagged as a treetop. The size of the window itself changes depending on the height of the cell on which it is centered. This is to compensate for the varying crown sizes, with tall trees having wide crowns and vice versa.
+
+Therefore the first step is to determine the function that will define the dynamic window size.. Essentially this cell should take a CHM cell value (i.e height of the canopy above the ground at that location) and return the radius of the search window. Here we will define a simple linear equation, but any funcition with a single input and output will work.
+
+```{r}
+lin <- function(x){x * 0.05 + 0.6}
+```
+
+We do not wish for the `vwf` to lag low-lying underbrush or other spurious treetops, and so we also set a minimum height of 2m using the `minHeight` argument. any cell with a lower value will not be tagged as a treetop
+
+```{r}
+ttops <- vwf(CHM = kootenayCHM, winFun = lin, minHeight = 2)
+
+# Plot these treetops on top of the CHM
+
+plot(kootenayCHM, xlab = "", ylab = "", xat = 'n', yaxt = 'n')
+
+# Add dominant treetops to the plot
+plot(ttops, col = "blue", pch = 20, cex = 0.5, add = TRUE)
+```
+
+```{r}
+mean(ttops$height)
+```
