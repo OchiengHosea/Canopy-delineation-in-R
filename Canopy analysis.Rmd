@@ -47,3 +47,39 @@ plot(ttops, col = "blue", pch = 20, cex = 0.5, add = TRUE)
 ```{r}
 mean(ttops$height)
 ```
+
+**Outlining tree crowns**
+
+Canopy height models often represent continuous, dense forests, where tree crowns abut against each other. Outlining discrete crown shapes from this type of forest is often referred to as canopy segmentation, where each crown outline is represented by a segment. Once a set of treetops have been detected from a canopy height model, `mcws` function can be used for this purpose.
+
+The `mcwsz` function implements the watershed algorithm from the imager library. Watershed algorithms are frequently used in topographical analysis to outline drainage basins. Given the morphological similarity between an inverted canopy and a terrain model, this same process can be used to outline the tree crowns. However a potential issue of oversegmentation, whereby branches, bumbs and other spurious treetops are given their own segments. This source of error can be mitigated by using a variant of the algorithm known as marker-controlled segmentation, whereby the watershed algorithm is constrained by a set of markers-in this case treetops.
+
+The `mcws` function also takes a `minHeight` argument, although this value should be lower than that which was assigned to `vwf`. For the latter, `minHeight` defines the lowest expected treetop, whereas for the former it should correspond to the height above ground of the fringes of the lowest trees
+
+```{r}
+# Create a crown map
+crowns <- mcws(treetops = ttops, CHM = kootenayCHM, minHeight = 1.5, verbose = FALSE)
+
+# plot crowns
+plot(crowns, col=sample(rainbow(50), length(unique(crowns[])), replace = TRUE), legend = FALSE, xlab = "", ylab = "", xaxt = 'n', yaxt = 'n')
+```
+
+By default, `mcws` return a raster, where each crown is given a unique cell value. Depending on the intended purpose of the crown map, it may be preferable to store these outlines as polygons. setting the format to polygons will convert the rasterized crown map to a set of polygons(A spatialPolygonsDataframe)
+
+```{r}
+# Create polygon crown map
+crownsPoly <- mcws(treetops = ttops, CHM = kootenayCHM, format = "polygons", minHeight = 1.5, verbose = FALSE)
+
+# Plot CHM
+plot(kootenayCHM, xlab = "", ylab = "", xaxt='n', yaxt='n')
+
+# Add crown outlines to the point
+plot(crownsPoly, border = "blue", lwd = 0.5, add = TRUE)
+```
+
+Assuming that each crown has a roughly circular shape, we can use the crown's area to compute its average circular diameter
+
+```{r}
+crownsPoly[["crownDiameter"]] <- sqrt(crownsPoly[["crownArea"]]/pi) * 2
+mean(crownsPoly$crownDiameter)
+```
