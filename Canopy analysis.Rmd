@@ -38,7 +38,7 @@ ttops <- vwf(CHM = kootenayCHM, winFun = lin, minHeight = 2)
 
 # Plot these treetops on top of the CHM
 
-plot(kootenayCHM, xlab = "", ylab = "", xat = 'n', yaxt = 'n')
+plot(kootenayCHM, xlab = "", ylab = "", xaxt = 'n', yaxt = 'n')
 
 # Add dominant treetops to the plot
 plot(ttops, col = "blue", pch = 20, cex = 0.5, add = TRUE)
